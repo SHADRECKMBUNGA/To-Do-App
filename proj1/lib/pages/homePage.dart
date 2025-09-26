@@ -13,6 +13,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
   final TextEditingController _controller = TextEditingController();
   final List<TodoItem> _tasks = [];
   bool _loading = false;
+  final String _table = 'tasks';
 
   @override
   void initState() {
@@ -24,7 +25,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
     setState(() => _loading = true);
     try {
       final response = await Supabase.instance.client
-          .from('todos')
+          .from(_table)
           .select()
           .order('created_at', ascending: false);
       final List data = response as List; // supabase returns List<dynamic>
@@ -47,7 +48,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
     if (text.isNotEmpty) {
       try {
         final inserted = await Supabase.instance.client
-            .from('todos')
+            .from(_table)
             .insert({'text': text, 'is_done': false})
             .select()
             .single();
@@ -70,7 +71,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
     });
     if (task.id.isEmpty) return;
     try {
-      await Supabase.instance.client.from('todos').delete().eq('id', task.id);
+      await Supabase.instance.client.from(_table).delete().eq('id', task.id);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete: $e')),
@@ -89,7 +90,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
     if (task.id.isEmpty) return;
     try {
       await Supabase.instance.client
-          .from('todos')
+          .from(_table)
           .update({'is_done': newVal})
           .eq('id', task.id);
     } catch (e) {
