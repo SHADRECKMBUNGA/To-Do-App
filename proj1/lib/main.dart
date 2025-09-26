@@ -21,16 +21,48 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color seed = const Color(0xFF2962FF); // Indigo/blue seed
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
+      themeMode: ThemeMode.system,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light),
         scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blue,
-          elevation: 0,
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          filled: true,
+          fillColor: Color(0xFFF6F7FB),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(centerTitle: true),
+        cardTheme: CardTheme(
+          elevation: 1.5,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.dark),
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          filled: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+        appBarTheme: const AppBarTheme(centerTitle: true),
+        cardTheme: CardTheme(
+          elevation: 1.5,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       home: const TodoHomePage(),

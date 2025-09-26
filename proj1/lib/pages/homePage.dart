@@ -36,60 +36,45 @@ class _TodoHomePageState extends State<TodoHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          color: Colors.blue,
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(40),
-            bottomRight: Radius.circular(40),
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              const Text(
-                'My Todo App',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
-                  child: _tasks.isEmpty
-                      ? _buildEmptyState(context)
-                      : _buildTaskList(context),
-                ),
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('My Todo App'),
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                colorScheme.primary,
+                colorScheme.primaryContainer,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
       ),
-      floatingActionButton: _tasks.isEmpty
-          ? FloatingActionButton(
-              onPressed: () => _showAddTaskDialog(context),
-              backgroundColor: Colors.blue,
-              child: const Icon(Icons.add),
-            )
-          : null,
+      body: SafeArea(
+        child: _tasks.isEmpty ? _buildEmptyState(context) : _buildTaskList(context),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (_tasks.isEmpty) {
+            _showAddTaskDialog(context);
+          } else {
+            _addTask();
+          }
+        },
+        label: Text(_tasks.isEmpty ? 'Add task' : 'Add'),
+        icon: const Icon(Icons.add),
+      ),
     );
   }
 
   Widget _buildTaskList(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           Row(
@@ -97,56 +82,58 @@ class _TodoHomePageState extends State<TodoHomePage> {
               Expanded(
                 child: TextField(
                   controller: _controller,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter task',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  decoration: InputDecoration(
+                    hintText: 'What do you want to do?',
+                    prefixIcon: const Icon(Icons.edit_outlined),
+                    suffixIcon: _controller.text.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Clear',
+                            onPressed: () {
+                              setState(() => _controller.clear());
+                            },
+                            icon: const Icon(Icons.clear),
+                          ),
                   ),
+                  onSubmitted: (_) => _addTask(),
                 ),
               ),
               const SizedBox(width: 12),
-              ElevatedButton(
+              FilledButton.icon(
                 onPressed: _addTask,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                ),
-                child: const Text('Add'),
+                icon: const Icon(Icons.add),
+                label: const Text('Add'),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
               itemCount: _tasks.length,
               itemBuilder: (context, index) {
                 final task = _tasks[index];
-                return ListTile(
-                  leading: Checkbox(
-                    value: task.isDone,
-                    onChanged: (_) => _toggleTask(index),
-                  ),
-                  title: Text(
-                    task.text,
-                    style: TextStyle(
-                      decoration: task.isDone
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                      color: Colors.black,
-                      fontSize: 18,
+                return Card(
+                  child: ListTile(
+                    leading: Checkbox(
+                      value: task.isDone,
+                      onChanged: (_) => _toggleTask(index),
                     ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _deleteTask(index),
+                    title: Text(
+                      task.text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        decoration: task.isDone
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      tooltip: 'Delete',
+                      icon: const Icon(Icons.delete_outline),
+                      color: colorScheme.error,
+                      onPressed: () => _deleteTask(index),
+                    ),
                   ),
                 );
               },
@@ -158,26 +145,30 @@ class _TodoHomePageState extends State<TodoHomePage> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.assignment, size: 200, color: Colors.grey[300]),
-          const SizedBox(height: 24),
-          const Text(
-            'No tasks yet.',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle_outline, size: 120, color: colorScheme.primary.withOpacity(0.2)),
+            const SizedBox(height: 24),
+            Text(
+              'No tasks yet',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Add one!',
-            style: TextStyle(fontSize: 16, color: Colors.black54),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Tap the + button to add your first task',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -199,7 +190,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 if (newTask.trim().isNotEmpty) {
                   setState(() {
