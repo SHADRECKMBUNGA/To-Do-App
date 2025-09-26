@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         appBarTheme: const AppBarTheme(centerTitle: true),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 1.5,
           margin: const EdgeInsets.symmetric(vertical: 6),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
         appBarTheme: const AppBarTheme(centerTitle: true),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 1.5,
           margin: const EdgeInsets.symmetric(vertical: 6),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
