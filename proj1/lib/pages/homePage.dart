@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'toDoItemPage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TodoHomePage extends StatefulWidget {
   const TodoHomePage({super.key});
@@ -11,27 +12,94 @@ class TodoHomePage extends StatefulWidget {
 class _TodoHomePageState extends State<TodoHomePage> {
   final TextEditingController _controller = TextEditingController();
   final List<TodoItem> _tasks = [];
+  bool _loading = false;
 
-  void _addTask() {
-    final text = _controller.text.trim();
-    if (text.isNotEmpty) {
-      setState(() {
-        _tasks.add(TodoItem(text));
-        _controller.clear();
-      });
+  @override
+  void initState() {
+    super.initState();
+    _fetchTasks();
+  }
+
+  Future<void> _fetchTasks() async {
+    setState(() => _loading = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('todos')
+          .select()
+          .order('created_at', ascending: false);
+      final List data = response as List; // supabase returns List<dynamic>
+      _tasks
+        ..clear()
+        ..addAll(data.map((e) => TodoItem.fromMap(e as Map<String, dynamic>)));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load tasks: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _deleteTask(int index) {
+  Future<void> _addTask() async {
+    final text = _controller.text.trim();
+    if (text.isNotEmpty) {
+      try {
+        final inserted = await Supabase.instance.client
+            .from('todos')
+            .insert({'text': text, 'is_done': false})
+            .select()
+            .single();
+        setState(() {
+          _tasks.insert(0, TodoItem.fromMap(inserted));
+          _controller.clear();
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add task: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteTask(int index) async {
+    final task = _tasks[index];
     setState(() {
       _tasks.removeAt(index);
     });
+    if (task.id.isEmpty) return;
+    try {
+      await Supabase.instance.client.from('todos').delete().eq('id', task.id);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete: $e')),
+      );
+      // best-effort refetch
+      _fetchTasks();
+    }
   }
 
-  void _toggleTask(int index) {
+  Future<void> _toggleTask(int index) async {
+    final task = _tasks[index];
+    final newVal = !task.isDone;
     setState(() {
-      _tasks[index].isDone = !_tasks[index].isDone;
+      _tasks[index].isDone = newVal;
     });
+    if (task.id.isEmpty) return;
+    try {
+      await Supabase.instance.client
+          .from('todos')
+          .update({'is_done': newVal})
+          .eq('id', task.id);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update: $e')),
+      );
+      setState(() {
+        _tasks[index].isDone = !newVal;
+      });
+    }
   }
 
   @override
@@ -55,7 +123,14 @@ class _TodoHomePageState extends State<TodoHomePage> {
         ),
       ),
       body: SafeArea(
-        child: _tasks.isEmpty ? _buildEmptyState(context) : _buildTaskList(context),
+        child: RefreshIndicator(
+          onRefresh: _fetchTasks,
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : (_tasks.isEmpty
+                  ? _buildEmptyState(context)
+                  : _buildTaskList(context)),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
