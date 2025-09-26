@@ -27,7 +27,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
       final response = await Supabase.instance.client
           .from(_table)
           .select()
-          .order('created_at', ascending: false);
+          .order('id', ascending: false);
       final List data = response as List; // supabase returns List<dynamic>
       _tasks
         ..clear()
@@ -49,7 +49,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
       try {
         final inserted = await Supabase.instance.client
             .from(_table)
-            .insert({'text': text, 'is_done': false})
+            .insert({'title': text, 'is_complete': false})
             .select()
             .single();
         setState(() {
@@ -91,7 +91,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
     try {
       await Supabase.instance.client
           .from(_table)
-          .update({'is_done': newVal})
+          .update({'is_complete': newVal})
           .eq('id', task.id);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

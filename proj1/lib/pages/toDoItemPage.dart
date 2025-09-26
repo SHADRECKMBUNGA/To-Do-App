@@ -9,23 +9,25 @@ class TodoItem {
 
   factory TodoItem.fromMap(Map<String, dynamic> map) {
     return TodoItem(
-      map['text'] as String? ?? '',
+      // Support multiple column names: 'title' (your table) or 'text'
+      (map['title'] ?? map['text'] ?? '') as String,
       id: (map['id'] ?? '').toString(),
-      isDone: map['is_done'] as bool? ?? false,
+      // Support 'is_complete' (your table), 'is_completed', or 'is_done'
+      isDone: (map['is_complete'] ?? map['is_completed'] ?? map['is_done'] ?? false) as bool,
     );
   }
 
   Map<String, dynamic> toInsertMap() {
     return {
-      'text': text,
-      'is_done': isDone,
+      'title': text,
+      'is_complete': isDone,
     };
   }
 
   Map<String, dynamic> toUpdateMap() {
     return {
-      'text': text,
-      'is_done': isDone,
+      'title': text,
+      'is_complete': isDone,
     };
   }
 }
